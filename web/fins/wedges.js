@@ -311,7 +311,11 @@ function clearRun(contact, uDir, half, partTris) {
   // past an end: the gap outward, along the run's line from the inner neighbour
   const beyond = (w, inner) => [2 * w[0] - inner[0], 2 * w[1] - inner[1], 2 * w[2] - inner[2]];
   const halfway = (w, q) => Math.hypot(q[0] - w[0], q[1] - w[1]) / 2;
+  // a blade past the edge of the build plate has nowhere to print (PROP.bounds)
+  const bd = PROP.bounds, m = half + 0.5;
+  const onPlate = (w) => !bd || (w[0] - m >= bd.x0 && w[0] + m <= bd.x1 && w[1] - m >= bd.y0 && w[1] + m <= bd.y1);
   const clear = contact.map((w, i) => {
+    if (!onPlate(w)) return false;
     const back = i > 0 ? !blocked(w, contact[i - 1], halfway(w, contact[i - 1]))
                        : !blocked(w, beyond(w, contact[1]), PERP.gap);
     const fwd = i < n - 1 ? !blocked(w, contact[i + 1], halfway(w, contact[i + 1]))

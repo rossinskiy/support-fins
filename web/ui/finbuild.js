@@ -16,6 +16,7 @@ import {
 } from './remove.js';
 import { updateReadout } from './readout.js';
 import { islands } from './islands.js';
+import { clipToBox } from '../clipmesh.js';
 import {
   drawnTris, drawnMesh, drawMaterial, drawShown, clearPreview, rebuildDrawn,
 } from './walls.js';
@@ -115,6 +116,16 @@ function clearSpinner() {
 /** The build request for the settings on the page; `isl`, the Full coverage island
  *  starts of the model built (the live one's by default: ui/parkedbuild.js has its
  *  own). */
+function plateBounds() {
+  // read off the page, not imported: ui/volume.js would make an import cycle
+  const sel = el('volume').value;
+  const [vx, vy] = sel === 'custom' ? [el('vx').valueAsNumber, el('vy').valueAsNumber]
+    : (sel.match(/\d+(\.\d+)?/g) ?? []).map(Number);
+  if (!(vx > 0 && vy > 0)) return null;
+  const v = { x: vx, y: vy }, mx = 0, my = 0;   // part centred on the plate
+  return { x0: -v.x / 2 - mx, x1: v.x / 2 - mx, y0: -v.y / 2 - my, y1: v.y / 2 - my };
+}
+
 export function finOpts(isl = islands) {
   return { mode: finMode,
            bedPad: el('bed-pad').value !== 'off',
@@ -146,7 +157,9 @@ export function finOpts(isl = islands) {
                        iface: PROP.iface,
                        // tine direction (#309): resin pins instead of the comb
                        tineDir: PROP.tineDir, pinDepth: PROP.pinDepth,
-                       nozzle, wallLines } };
+                       nozzle, wallLines,
+                       // the plate edge, in the build's frame (part centred)
+                       bounds: plateBounds() } };
 }
 
 /** The engine settings a Worker needs to build what this page would: the same
@@ -336,6 +349,28 @@ export function workerTopology(topo) {
 // (a tilted part rests on an edge and needs a pad however its walls are placed,
 // and that logic lives in fins/pad.js + fins/seating.js), so Draw ignores the
 // suggested walls and shows the hand-drawn ones instead.
+/** The fins, each cut to the build plate. The engine steers its walls inside
+ *  (PROP.bounds), but a wedge or a flared foot can still reach past the edge: that
+ *  fin is shortened at the plate's edge (clipmesh.js, capped so it stays a closed
+ *  solid). Its cut triangles are appended to the build and its record points at them. */
+function keepOnPlate(built) {
+  const b = plateBounds();
+  if (!b || !built.fins) return built.fins;
+  const tris = built.triangles;
+  const out = (p) => p[0] < b.x0 - 0.01 || p[0] > b.x1 + 0.01 || p[1] < b.y0 - 0.01 || p[1] > b.y1 + 0.01;
+  const kept = [];
+  for (const f of built.fins) {
+    const ranges = f.triRanges ?? [];
+    if (!ranges.some(([lo, hi]) => tris.slice(lo, hi).some(out))) { kept.push(f); continue; }
+    const cut = clipToBox(ranges.flatMap(([lo, hi]) => tris.slice(lo, hi)), b);
+    if (cut.length < 12) continue;               // nothing worth printing is left inside
+    const at = tris.length;
+    for (const v of cut) tris.push(v);
+    kept.push({ ...f, triRanges: [[at, at + cut.length]] });
+  }
+  return kept;
+}
+
 function applyBuilt(built) {
   if (!currentBuild()) return;
   requestRender();      // a worker build lands outside any input event
@@ -364,6 +399,7 @@ function applyBuilt(built) {
     // Per-fin records are rebuilt and the removals re-applied (ui/remove.js), so a
     // removal survives a same-orientation rebuild. The fin mesh is the FILTERED
     // triangle set; exporters read finTris unchanged.
+    built.fins = keepOnPlate(built);
     finTris = adoptFins(built);
     finMesh = meshFrom(finTris, finMaterial, ifaceMaterial);
     // In Suggest, also (re)build any hand-drawn walls layered on top. rebuildDrawn
@@ -390,3 +426,6 @@ export function markFinsStale() {
   el('s-fins').textContent = t('generating supports…');
   el('report-row').hidden = true;     // nothing current to report (ui/report.js) until it lands
 }
+
+// A different plate changes where walls may stand: build again for the new edge.
+document.addEventListener('buildvolumechange', () => { if (topology && lastResult) refreshFins(); });

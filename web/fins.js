@@ -100,6 +100,9 @@ export function applyTunables(t = {}) {
   if (['auto', 'light', 'sure', 'custom'].includes(t.padStyle)) PAD.style = t.padStyle;
   if (t.padCustom) for (const k of Object.keys(PAD.custom)) set(PAD.custom, k, t.padCustom[k]);
   set(PROP, 'gap', t.propGap);
+  // The build plate, so a wall is never placed past its edge (prop/clearance.js).
+  const b = t.bounds;
+  PROP.bounds = b && [b.x0, b.x1, b.y0, b.y1].every(Number.isFinite) ? { ...b } : null;
   if (Number.isFinite(t.tineContactOffset)) PROP.tineContactOffset = Math.max(-0.2, Math.min(0.2, t.tineContactOffset));
   if (Number.isFinite(t.tallRibsHeight) && t.tallRibsHeight > 0) {
     BRACE.tallH = Math.min(2000, Math.max(1, t.tallRibsHeight));

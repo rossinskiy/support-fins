@@ -29,6 +29,16 @@ export function stationIsClear(line, k, topo, rot, offset) {
 
   const top = p[2] - PROP.gap;
 
+  // Past the edge of the build plate there is nowhere to print: not a clear station.
+  const bd = PROP.bounds;
+  if (bd) {
+    const hw = profileHalf(0.5, top) + 0.3;
+    for (const w of [0, hw, -hw]) {
+      const x = p[0] + sx * w, y = p[1] + sy * w;
+      if (x < bd.x0 || x > bd.x1 || y < bd.y0 || y > bd.y1) return false;
+    }
+  }
+
   // Probe the FULL height, and probe OUTSIDE the wall's own faces.
   //
   // Both halves of that were wrong and each cost a weld. The heights ran

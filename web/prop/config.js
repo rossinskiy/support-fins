@@ -8,6 +8,7 @@
 
 export const PROP = {
   roundFeet: false,
+  bounds: null,     // {x0,x1,y0,y1}: the build plate in print space; walls stay inside it (set by applyTunables)
   th: 1.0,          // wall thickness. 1.0 (two 0.5mm passes) not breakaway.py's
                     // 1.2: a prop is a free-standing wall with nothing bracing
                     // its sides, so it cannot go as thin as a Slant3D fin (whose
