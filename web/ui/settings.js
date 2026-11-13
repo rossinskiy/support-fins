@@ -8,7 +8,7 @@ import { applyTunables, FIN, PAD } from '../fins.js';
 import { BRACE, PROP } from '../prop.js';
 import { CUT } from '../cutout.js';
 import { MATERIAL } from '../materials.js';
-import { applyNozzle, applyWallLines, wallLinesFit } from '../nozzle.js';
+import { applyNozzle, applyWallLines, applyFootGrip, wallLinesFit } from '../nozzle.js';
 import { el } from './dom.js';
 import { histPush } from './history.js';
 import { removeMode, syncRemoveUI, cancelRemove } from './remove.js';
@@ -367,6 +367,12 @@ el('wall-lines').addEventListener('change', () => {
   debouncedRefresh();
 });
 
+el('foot-grip').addEventListener('change', () => {
+  applyFootGrip(Number(el('foot-grip').value));
+  syncSectionSums();
+  debouncedRefresh();
+});
+
 /** The fins-toggle button's appearance for the current finsVisible. Factored out
  *  so undo/redo can re-sync it after restoring the flag. */
 export function syncFinsToggleUI() {
@@ -486,6 +492,7 @@ export function initSettings() {
   if (Number.isFinite(gap)) PROP.gap = Math.min(0.4, Math.max(0.1, gap));
   applyNozzle(Number(el('nozzle').value));   // ...and the widths to the remembered nozzle
   applyWallLines(Number(el('wall-lines').value));
+  applyFootGrip(Number(el('foot-grip').value));
   fitWallLines();
 }
 

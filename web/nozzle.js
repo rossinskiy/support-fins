@@ -33,7 +33,7 @@ export const WALL_LINES = Object.freeze([2, 4, 6, 8]);
 // The 0.4 numbers, captured before anything scales them.
 const BASE = Object.freeze({
   th: PROP.th, tip: PROP.tip, tineW: PROP.tineW, tipH: PROP.tipH,
-  footMin: PROP.footMin, footMax: PROP.footMax, squatBrimW: PROP.squatBrimW, edgeInset: PROP.edgeInset,
+  footMin: PROP.footMin, footMax: PROP.footMax, footRatio: PROP.footRatio, permFoot: PERP.footHalf, swayFoot: SWAY.footHalf, squatBrimW: PROP.squatBrimW, edgeInset: PROP.edgeInset,
   perpTh: PERP.th,
   swayTineW: SWAY.tineW, swayThMin: SWAY.thMin, swayThMax: SWAY.thMax, swayThPerMm: SWAY.thPerMm,
   wallHalf: SWAY.wallHalf,
@@ -41,6 +41,19 @@ const BASE = Object.freeze({
 
 export let nozzle = NOZZLE_REF;
 export let wallLines = 2;
+// Foot width multiplier: how far the flange under each wall reaches past it. Wider
+// feet hold a tall thin wall to the plate against the print head's knocks. 1 is the
+// old tuned width; the page defaults to 1.5; the span cap in prop/sweep.js footFor keeps
+// neighbouring rows from fusing no matter what is asked here.
+export const FOOT_GRIPS = Object.freeze([1, 1.5, 1.8]);
+export let footGrip = 1;   // the page sets its own default (the Foot width menu) when it starts
+
+/** Foot width multiplier (1, 1.5 or 1.8). Anything else is ignored. */
+export function applyFootGrip(g) {
+  if (!FOOT_GRIPS.includes(g)) return;
+  footGrip = g;
+  rescale();
+}
 
 /** Scale the support widths for this nozzle diameter (mm). Junk is ignored. */
 export function applyNozzle(d) {
@@ -76,8 +89,11 @@ function rescale() {
   // The feet are half-widths from the wall's centre: a wider wall would swallow them,
   // so they move out with its face.
   const wider = (PROP.th - BASE.th) / 2;
-  PROP.footMin = BASE.footMin + wider;
-  PROP.footMax = BASE.footMax + wider;
+  PROP.footMin = (BASE.footMin + wider) * footGrip;
+  PROP.footMax = (BASE.footMax + wider) * footGrip;
+  PROP.footRatio = BASE.footRatio * footGrip;
+  PERP.footHalf = BASE.permFoot * footGrip;
+  SWAY.footHalf = BASE.swayFoot * footGrip;
   // ...but a brim stays under half the row spacing, or neighbouring rows' brims fuse.
   PROP.squatBrimW = Math.min(BASE.squatBrimW + wider, (PROP.maxUnsupportedSpan - 1) / 2);
   // The neck into the tip: a 4 mm wall necking to 0.6 over the 1.5 mm taper would
@@ -94,3 +110,4 @@ function rescale() {
   // tabs out of the side instead of under the part. It steps in as the tip widens.
   PROP.edgeInset = BASE.edgeInset + PROP.tineReachTip;
 }
+

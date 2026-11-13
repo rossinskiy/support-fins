@@ -7,7 +7,7 @@ import * as THREE from 'three';
 import { buildFins, FIN, PAD } from '../fins.js';
 import { BRACE, PROP } from '../prop.js';
 import { CUT } from '../cutout.js';
-import { nozzle, wallLines } from '../nozzle.js';
+import { nozzle, wallLines, footGrip } from '../nozzle.js';
 import { el } from './dom.js';
 import { t } from './i18n.js';
 import { scene, meshFrom, ifaceMaterial, clip, requestRender } from './scene.js';
@@ -157,7 +157,7 @@ export function finOpts(isl = islands) {
                        iface: PROP.iface,
                        // tine direction (#309): resin pins instead of the comb
                        tineDir: PROP.tineDir, pinDepth: PROP.pinDepth,
-                       nozzle, wallLines,
+                       nozzle, wallLines, footGrip,
                        // the plate edge, in the build's frame (part centred)
                        bounds: plateBounds() } };
 }

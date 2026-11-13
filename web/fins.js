@@ -51,7 +51,7 @@ import { buildPerpFins, PERP, propServesPatch, unservedAfterWedges, wedgeVeto } 
 import { judgeDownhill } from './fins/downhill.js';
 import { automaticTargets } from './fins/coverage.js';
 import { bends, CURVED } from './prop/curved.js';
-import { applyNozzle, applyWallLines } from './nozzle.js';
+import { applyNozzle, applyWallLines, applyFootGrip } from './nozzle.js';
 
 // Moved into web/fins/ (one module per concern); re-exported here so every
 // importer of fins.js is unchanged.
@@ -129,6 +129,7 @@ export function applyTunables(t = {}) {
   // And the nozzle and wall lines, which scale the support widths (nozzle.js).
   if (t.nozzle !== undefined) applyNozzle(t.nozzle);
   if (t.wallLines !== undefined) applyWallLines(t.wallLines);
+  if (t.footGrip !== undefined) applyFootGrip(t.footGrip);
 }
 
 /**
