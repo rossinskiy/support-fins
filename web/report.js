@@ -17,7 +17,7 @@ import { scaleAbout } from './scale.js';
 
 export const REPORT = {
   v: 1,
-  repo: 'https://github.com/gittrahan/support-fins',
+  repo: 'https://github.com/rossinskiy/support-fins',
   template: 'coverage-report.yml',
   // GitHub refuses a longer new-issue link; past it the JSON stays on the clipboard
   // (Copy settings) and the form asks for it instead

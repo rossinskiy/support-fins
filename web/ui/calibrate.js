@@ -11,7 +11,7 @@ import { el } from './dom.js';
 import { t } from './i18n.js';
 
 const DIR = 'calibration/';
-const GUIDE = 'https://github.com/gittrahan/support-fins/blob/main/docs/CALIBRATION.md';
+const GUIDE = 'https://github.com/rossinskiy/support-fins/blob/main/docs/CALIBRATION.md';
 
 // Menu order = print order: angle first, since it decides which faces get support.
 export const COUPONS = [

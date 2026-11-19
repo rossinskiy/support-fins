@@ -59,7 +59,7 @@ export function stamp(data, version, date) {
   };
 }
 
-export const RELEASES_URL = 'https://github.com/gittrahan/support-fins/releases';
+export const RELEASES_URL = 'https://github.com/rossinskiy/support-fins/releases';
 const esc = (t) => String(t).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
 const block = (name) => [`<!-- BEGIN ${name} (web/changelog.js writes this block) -->`, `<!-- END ${name} -->`];
 
